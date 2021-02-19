@@ -43,7 +43,7 @@ You're reading it!
 
 #### 1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
 
-The code for this step is contained in the function `cal_chessBoard()` (line10) & `cal_undistort begins()`(line41) in 1st code cell of the Jupyter notebook located in "./advanced_lane_findinge.ipynb".  
+The code for this step is contained in the function `cal_chessBoard()` (line10) & `cal_undistort begins()`(line45) in 1st code cell of the Jupyter notebook located in "./advanced_lane_findinge.ipynb".  
 
 `objp` is the object points inn real world, and here is asumming z=0 for all points. 
 all `objp` are appended into `objpoints` for all chessboard images.
@@ -64,35 +64,40 @@ To demonstrate this step, I will describe how I apply the distortion correction 
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines 64 through 73 in cell1 of `edge_detection()`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
+I used a combination of rgb color(r channel) and lab color(l,b channel) to generate a binary image (thresholding steps at lines 57 through 123 in cell1 of `edge_detection()`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
 
 ![alt text][image3]
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
-The code for my perspective transform includes a function called `corners_unwarp()`, which appears in lines 47 through 51 in `corners_unwarp()` in cell1 in the Jupyter notebook.  The `corners_unwarp()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  
+The code for my perspective transform includes a function called `corners_unwarp()`, which appears in lines 51 through 55 in `corners_unwarp()` in cell1 in the Jupyter notebook.  The `corners_unwarp()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  
 
 src and dst points are chosed manually as below:
-src = np.float32([[550,450],[730,450],[0,720],[1280,720]])
-dst = np.float32([[-80,0],[1280,0],[140,720],[1060,720]]) 
+ssrc = np.float32([[560,470],[720,470],[0,720],[1280,720]])
+dst = np.float32([[250,0],[1030,0],[140,720],[1140,720]])
 
 I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
 
 ![alt text][image4]
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
-`fit_polynomial()`(from line173) to use sliding widow method and `search_around_poly()`(from line217) to use serching around fit line method to define the current fit curve lines.
-the fitted lines are drawed onto the warped images as below:
+`fit_polynomial()`(from line 224) to use sliding widow method: 
+there will be an offset defined according to the direction where the curve bend to, so that can cover some high curve change rate.
+
+And `search_around_poly()`(from line 268) to use serching around fit line method to define the current fit curve lines.
+the margin can be adjusted with offset(wider at top side, and narrower at bottom side accodeing to the curve/radius degree change rate) to cover some high curve change rate.
+
+The fitted lines are drawed onto the warped images as below:
 
 ![alt text][image5]
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-`measure_curvature_real()` (from line 238 )to calculate the curvature of the both lane lines at the bottom of the image frame.
+`measure_curvature_real()` (from line 296 )to calculate the curvature of the both lane lines at the bottom of the image frame.
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-`draw_lanes()` (from line250) is to the detected lane lines and lane lane and warp back into the original image and showed as below:
+`draw_lanes()` (from line 308) is to the detected lane lines and lane lane and warp back into the original image and showed as below:
 
 ![alt text][image6]
 
@@ -110,5 +115,8 @@ Here's a [link to my video result](./project_video_out.mp4)
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Although I did some filtering to prevent too much noise to affect the precision of the lane lines detected, but still some situations such as at the BRIDGE (the color is obviously different from normal high way sufaces.) there will be fluctuations of the lane lines there.
-maybe it can be improved by tuning the threshold and other position parameters and filtering parameters, or to use some other algorism.
+Although I did some filtering to prevent too much noise to affect the precision of the lane lines detected, but still some small fluctation exist during the way. Not smooth enough as expected. 
+The curvature is not 1km, but similar to 2 km, maybe the parasmeter is not correct enough.
+The curvature change rate will be very high when the line is close to straight, so i think it is better to use a curve angle change rate (already used in my code).
+It is a little hard to find a good src and dst points for the warper.
+And still a lot modification needed to cover challenge_video.mp4 and harder_challenge_video.mp4.
